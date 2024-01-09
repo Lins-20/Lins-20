@@ -1,0 +1,5 @@
+export enum CHAINID {
+    MUMBAI= 80001,
+    POLYGON = 137,
+    HARDHAT_NETWORK = 31337,
+}
