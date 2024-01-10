@@ -13,13 +13,13 @@ yarn
 #### Run deploy
 
 ```shell
-yarn deploy --network goerli
+yarn deploy --network linea_testnet
 ```
 
 #### Verify code
 
 ```shell
-yarn verify --network goerli 0x000The_Contract_Address
+yarn verify --network linea_testnet 0x000The_Contract_Address
 ```
 
 #### Run tests
