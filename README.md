@@ -47,7 +47,7 @@ const tick = "tick"; // tick name
 const limit = 1000_000000000000000000n;  // mint limit 1000
 const totalSupply = 2_000_000_000000000000000000n; // 2 million
 const burnsRate = 100; // 1% , 10000 = 100%. no burning need for 0 
-const fee = ethers.utils.parseEther("0.0001"); // mint fee, 0.0001eth
+const fee = ethers.utils.parseEther("0"); // no mint fee
 
 const prvKey = "0xabcd...."; // your private key
 const rpcUrl = "http://xxx.rpc"; // rpc url
@@ -69,13 +69,14 @@ const abi = [
 ];
 
 
+const mintee = ethers.utils.parseEther("0"); // no mint fee
 const prvKey = "0xabcd...."; // your private key
 const rpcUrl = "http://xxx.rpc"; // rpc url
 const signer = new Wallet(prvKey, new ethers.JsonRpcProvider(rpcUrl));
 
 const contract = new ethers.Contract(tickAddr, abi, signer);
 // mint
-await contract.mint();
+await contract.mint({value: mintFee});
 
 
 ```
