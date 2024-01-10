@@ -1,6 +1,8 @@
 # Lins20 Inscription
 
-Lins20 inscription is a xxxxx
+Lins-20 is the first scalable smart inscription protocol, built on 
+@LineaBuild
+. Integrate smart contracts into inscriptions to make the index more fair and transparent, and give inscriptions more expanded functions
 
 ## Initialization
 
@@ -67,14 +69,13 @@ const abi = [
 ];
 
 
-const mintFee = ethers.utils.parseEther("0.0001"); // mint fee, 0.0001eth
 const prvKey = "0xabcd...."; // your private key
 const rpcUrl = "http://xxx.rpc"; // rpc url
 const signer = new Wallet(prvKey, new ethers.JsonRpcProvider(rpcUrl));
 
 const contract = new ethers.Contract(tickAddr, abi, signer);
 // mint
-await contract.mint({value: mintFee});
+await contract.mint();
 
 
 ```
