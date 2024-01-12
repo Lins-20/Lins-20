@@ -6,16 +6,19 @@ import "./Lins20.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-contract Lins20Factory is Ownable, Pausable {
 
+contract Lins20Factory is Initializable, PausableUpgradeable, Ownable2StepUpgradeable, UUPSUpgradeable {
     struct Parameters {
-        string tick;          // inscription tick
+        string tick;         // inscription tick
         uint256 limit;       // limit per mint
         uint256 totalSupply; // total supply
         uint256 burnsRate;   // transfer burns rate  10000 = 100%
-        uint256 fee;         //mint fee
+        uint256 fee;         // mint fee
     }
 
     Parameters public parameters;
@@ -23,7 +26,12 @@ contract Lins20Factory is Ownable, Pausable {
     event InscribeDeploy(address indexed from, string content);
     event AddInscription(string tick, address indexed addr);
 
-    constructor() Ownable(_msgSender()) {}
+
+    function initialize() public initializer {
+        __Pausable_init();
+        __Ownable_init(_msgSender());
+        __UUPSUpgradeable_init();
+    }
 
     /*
      * create new inscription
@@ -69,5 +77,9 @@ contract Lins20Factory is Ownable, Pausable {
     function unpause() external onlyOwner {
         _unpause();
     }
+
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
 
 }

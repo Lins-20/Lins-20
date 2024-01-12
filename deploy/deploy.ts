@@ -11,7 +11,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         args: [],
         log: true,
         contract: 'Lins20Factory',
+        proxy: {
+            owner: deployer,
+            proxyContract: 'OpenZeppelinTransparentProxy',
+            execute: {
+                init: {
+                    methodName: 'initialize',
+                    args: [],
+                }
+            }
+        }
     })
+
+
 }
 
 export default func
