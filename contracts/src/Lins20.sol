@@ -81,12 +81,12 @@ contract Lins20 is ERC20, Pausable, Ownable {
         if(burnsRate != 0) {
             destory = Math.mulDiv(amount, burnsRate, 10000);
         }
-        require(balanceOf(msg.sender) >= (destory + amount), "insufficient balance");
+        require(balanceOf(msg.sender) >= amount, "insufficient balance");
 
         if(destory != 0) {
             _burn(msg.sender, destory);
         }
-        _transfer(msg.sender, to, amount);
+        _transfer(msg.sender, to, amount - destory);
 
         uint256 denominator = 10 ** decimals();
         uint256 fraction = amount % denominator;
