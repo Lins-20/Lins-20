@@ -8,13 +8,13 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./ILins20.sol";
+import "./IEthscription.sol";
 
 /**
  * @title Lins20
  * @dev Lins20 is a ERC20 token with inscription.
  */
-contract Lins20 is ERC20, Pausable, Ownable, ILins20 {
+contract Lins20 is ERC20, Pausable, Ownable, IEthscription {
     uint256 public limit;     // limit per mint
     uint256 public burnsRate; // transfer burns rate 10000 = 100%
     uint256 public fee;       // fee

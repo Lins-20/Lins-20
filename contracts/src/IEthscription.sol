@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-interface ILins20 {
+interface IEthscription {
     event ethscriptions_protocol_CreateEthscription(
         address indexed initialOwner,
         string contentURI
