@@ -4,6 +4,7 @@ import 'hardhat-deploy';
 import { CHAINID } from './constants/constants';
 import * as dotenv from 'dotenv'
 dotenv.config({ path: '.env' })
+import '@openzeppelin/hardhat-upgrades';
 
 const config: HardhatUserConfig = {
   networks: {

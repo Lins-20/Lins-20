@@ -8,11 +8,13 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./ILins20.sol";
+
 /**
  * @title Lins20
  * @dev Lins20 is a ERC20 token with inscription.
  */
-contract Lins20 is ERC20, Pausable, Ownable {
+contract Lins20 is ERC20, Pausable, Ownable, ILins20 {
     uint256 public limit;     // limit per mint
     uint256 public burnsRate; // transfer burns rate 10000 = 100%
     uint256 public fee;       // fee
@@ -74,6 +76,7 @@ contract Lins20 is ERC20, Pausable, Ownable {
         _mint(msg.sender, limit);
         current += limit;
         emit InscribeMint(msg.sender, _mintInscription);
+        emit ethscriptions_protocol_CreateEthscription(msg.sender, _mintInscription);
     }
 
     function transfer(address to, uint256 amount) public override whenNotPaused returns (bool) {
@@ -98,6 +101,7 @@ contract Lins20 is ERC20, Pausable, Ownable {
         }
         string memory ins = string.concat('data:,{"p":"lins20","op":"transfer","tick":"', tick, '","amt":"', value, '","to":"', Strings.toHexString(to), '"}');
         emit InscribeTransfer(msg.sender, ins);
+        emit ethscriptions_protocol_TransferEthscriptionForPreviousOwner(msg.sender, to, bytes32(abi.encodePacked(tick)));
         return true;
     }
 
