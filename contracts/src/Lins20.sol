@@ -18,8 +18,10 @@ contract Lins20 is ERC20, Pausable, Ownable, IEthscription {
     uint256 public limit;     // limit per mint
     uint256 public burnsRate; // transfer burns rate 10000 = 100%
     uint256 public fee;       // fee
-    uint256 public maxMint;   // max mint
+    uint256 public maxMint;   // max mint， total supply
     string public tick;       // inscription tick
+    uint256 public maxMintTimes; // max mint times size for each account
+    mapping(address => uint16) mintTimes; // mint times of each address
 
     uint256 public current = 0; // current mint
     string public _mintInscription = ""; // mint inscription
@@ -27,7 +29,7 @@ contract Lins20 is ERC20, Pausable, Ownable, IEthscription {
     event InscribeMint(address indexed from, string content);
     event InscribeTransfer(address indexed from, string content);
 
-      modifier notContract() {
+    modifier notContract() {
         require(tx.origin == msg.sender);
         _;
     }
@@ -40,6 +42,7 @@ contract Lins20 is ERC20, Pausable, Ownable, IEthscription {
         require(burnsRate < 10000, "burns out of range");
         require(maxMint % limit == 0, "limit incorrect");
 
+        maxMintTimes = 50;
         tick = _tick;
         _mintInscription = string.concat('data:,{"p":"lins20","op":"mint","tick":"', tick, '","amt":"', Strings.toString(limit/(10 ** decimals())), '"}');
     }
@@ -72,9 +75,11 @@ contract Lins20 is ERC20, Pausable, Ownable, IEthscription {
     function _doMint() internal whenNotPaused notContract {
         require(msg.value >= fee, "fee not enough");
         require(limit + current <= maxMint, "mint over");
+        require(mintTimes[msg.sender] < maxMintTimes, "max mint times reached");
 
         _mint(msg.sender, limit);
         current += limit;
+        mintTimes[msg.sender] += 1;
         emit InscribeMint(msg.sender, _mintInscription);
         emit ethscriptions_protocol_CreateEthscription(msg.sender, _mintInscription);
     }
@@ -105,11 +110,15 @@ contract Lins20 is ERC20, Pausable, Ownable, IEthscription {
         return true;
     }
 
+    function setMaxMintTimes(uint256 times) public onlyOwner {
+        maxMintTimes = times;
+    }
+
     function withdraw() public onlyOwner {
         payable(owner()).transfer(address(this).balance);
     }
 
-        /**
+    /**
      * @notice Pause (admin only)
      */
     function pause() external onlyOwner {
