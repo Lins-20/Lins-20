@@ -21,7 +21,7 @@ contract Lins20 is ERC20, Pausable, Ownable, IEthscription {
     uint256 public maxMint;   // max mint， total supply
     string public tick;       // inscription tick
     uint256 public maxMintTimes; // max mint times size for each account
-    mapping(address => uint16) mintTimes; // mint times of each address
+    mapping(address => uint16) public mintTimes; // mint times of each address
 
     uint256 public current = 0; // current mint
     string public _mintInscription = ""; // mint inscription
