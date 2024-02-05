@@ -23,12 +23,17 @@ describe("lins20 proxy", () => {
         return { impl, factory, owner, addr1, addr2 }
     }
 
-    it("process", async function () {
-        await deploy()
-    })
+    async function deployLins20() {
+        const { impl, factory, owner, addr1, addr2 } = await deploy()
+        const limit = 1000000000000000000000n, totalSupply = 2000000000000000000000000n, burns = 1000, fee = 2;
+        const tick = "abc";
+        await factory.createLins20(tick, limit, totalSupply, burns, fee);
+        const lins20Proxy = await factory.inscriptions(tick)
+        return { impl, factory, owner, addr1, addr2, lins20Proxy }
+    }
 
     it("create lins 20", async () => {
-        const {factory, impl} = await deploy();
+        const { factory, impl } = await deploy();
         const limit = 1000000000000000000000n, totalSupply = 2000000000000000000000000n, burns = 1000, fee = 2;
 
         const tick1 = "abc";
@@ -43,7 +48,7 @@ describe("lins20 proxy", () => {
         const addr2 = await factory.inscriptions(tick2)
         expect(addr2).to.exist;
 
-        const c1 = await ethers.getContractAt("Lins20V2", addr1) ;
+        const c1 = await ethers.getContractAt("Lins20V2", addr1);
         const c2 = await ethers.getContractAt("Lins20V2", addr2);
 
         expect(await c1.symbol() !== await c2.symbol()).eq(true);
@@ -53,61 +58,59 @@ describe("lins20 proxy", () => {
         expect(await c1.maxMint() !== await c2.maxMint()).eq(true);
         expect(await c1.owner() === await c2.owner()).eq(true);
 
-        const proxy = await ethers.getContractAt("Lins20Proxy", addr1) ;
+        const proxy = await ethers.getContractAt("Lins20Proxy", addr1);
         expect(await proxy.getImplementation() === await impl.getAddress());
     })
 
-    it("owner", async() => {
-        const {owner, factory} = await deploy();
-        const limit = 1000000000000000000000n, totalSupply = 2000000000000000000000000n, burns = 1000, fee = 2;
-
-        const tick1 = "abc";
-        await factory.createLins20(tick1, limit, totalSupply, burns, fee);
-
-        const addr1 = await factory.inscriptions(tick1)
-        expect(addr1).to.exist;
-        
-        const contract = await ethers.getContractAt("Lins20V2", addr1) ;
+    it("owner", async () => {
+        const { owner, lins20Proxy } = await deployLins20();
+        const contract = await ethers.getContractAt("Lins20V2", lins20Proxy);
         expect(await contract.owner() == owner.address).eq(true);
     })
 
     it("lins 20 upgrade", async () => {
         // deploy new impl
-        const {owner, factory, impl, addr1} = await deploy();
-
+        const { impl, lins20Proxy } = await deployLins20();
         const newImpl = await ethers.deployContract("Lins20V2");
         const newAddr = await newImpl.getAddress();
 
-        const limit = 2000000000000000000000n, totalSupply = 2000000000000000000000000n, burns = 1000, fee = 2;
-        const tick1 = "new";
-        await factory.createLins20(tick1, limit, totalSupply, burns, fee);
-
-        const proxyAddr = await factory.inscriptions(tick1)
-        expect(proxyAddr, "proxy address not exists").to.exist;
-        
-        const proxy = await ethers.getContractAt("Lins20Proxy", proxyAddr) ;
-        
+        const proxy = await ethers.getContractAt("Lins20Proxy", lins20Proxy);
         await proxy.upgradeTo(newAddr);
-
         expect(await proxy.getImplementation() !== await impl.getAddress(), "upgradeToAndCall error").eq(true);
 
     })
 
-    it("unauthorized upgrade", async() => {
-        const {owner, factory, impl, addr1} = await deploy();
+    it("unauthorized upgrade", async () => {
+        const { lins20Proxy, addr1 } = await deployLins20();
 
         const newImpl = await ethers.deployContract("Lins20V2");
         const newAddr = await newImpl.getAddress();
 
-        const limit = 2000000000000000000000n, totalSupply = 2000000000000000000000000n, burns = 1000, fee = 2;
-        const tick1 = "new";
-        await factory.createLins20(tick1, limit, totalSupply, burns, fee);
-
-        const proxyAddr = await factory.inscriptions(tick1)
-        expect(proxyAddr).to.exist;
-        
-        const proxy = await ethers.getContractAt("Lins20Proxy", proxyAddr) ;
-        // unauthorized
-        expect(proxy.connect(addr1.address).upgradeTo(newAddr)).to.be.reverted;;
+        const proxy = await ethers.getContractAt("Lins20Proxy", lins20Proxy);
+        await proxy.upgradeTo(newAddr);
+        expect(proxy.connect(addr1.address).upgradeTo(newAddr)).to.be.reverted;
     })
+
+    it("transfer pause & unpause", async () => {
+        const { lins20Proxy, addr1 } = await deployLins20();
+        const proxy = await ethers.getContractAt("Lins20V2", lins20Proxy);
+
+        expect(await proxy.transferPaused()).eq(false);
+        await proxy.pauseTransfer();
+        expect(await proxy.transferPaused()).eq(true);
+
+        await proxy.mint({ value: 2 });
+        expect(proxy.transfer(await addr1.getAddress(), 1000n)).to.be.reverted;
+
+        await proxy.unpauseTransfer();
+        expect(await proxy.transferPaused()).eq(false);
+    });
+
+    it("mint", async () => {
+
+    });
+
+    it("recover", async () => {
+        // TODO
+    });
 });
