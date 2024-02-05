@@ -4,6 +4,7 @@ import { ethers } from "hardhat";
 
 describe("lins20 proxy", () => {
 
+    const limit = 1000000000000000000000n, totalSupply = 2000000000000000000000000n, burns = 1000, fee = 2;
     async function deploy() {
         const [owner, addr1, addr2] = await ethers.getSigners();
 
@@ -25,7 +26,6 @@ describe("lins20 proxy", () => {
 
     async function deployLins20() {
         const { impl, factory, owner, addr1, addr2 } = await deploy()
-        const limit = 1000000000000000000000n, totalSupply = 2000000000000000000000000n, burns = 1000, fee = 2;
         const tick = "abc";
         await factory.createLins20(tick, limit, totalSupply, burns, fee);
         const lins20Proxy = await factory.inscriptions(tick)
@@ -34,7 +34,7 @@ describe("lins20 proxy", () => {
 
     it("create lins 20", async () => {
         const { factory, impl } = await deploy();
-        const limit = 1000000000000000000000n, totalSupply = 2000000000000000000000000n, burns = 1000, fee = 2;
+        
 
         const tick1 = "abc";
         await factory.createLins20(tick1, limit, totalSupply, burns, fee);
@@ -99,7 +99,7 @@ describe("lins20 proxy", () => {
         await proxy.pauseTransfer();
         expect(await proxy.transferPaused()).eq(true);
 
-        await proxy.mint({ value: 2 });
+        await proxy.mint({ value: fee });
         expect(proxy.transfer(await addr1.getAddress(), 1000n)).to.be.reverted;
 
         await proxy.unpauseTransfer();
@@ -107,7 +107,12 @@ describe("lins20 proxy", () => {
     });
 
     it("mint", async () => {
+        const { lins20Proxy, addr1, owner } = await deployLins20();
+        const contract = await ethers.getContractAt("Lins20V2", lins20Proxy);
 
+        expect(await contract.balanceOf(owner.address)).eq(0n)
+        await contract.mint({value: fee}); // mint 
+        expect(await contract.balanceOf(owner.address)).eq(limit)
     });
 
     it("recover", async () => {
