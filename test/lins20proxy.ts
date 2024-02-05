@@ -54,7 +54,7 @@ describe("lins20 proxy", () => {
         expect(await c1.owner() === await c2.owner()).eq(true);
 
         const proxy = await ethers.getContractAt("Lins20Proxy", addr1) ;
-        expect(await proxy.getImplementation() === impl);
+        expect(await proxy.getImplementation() === await impl.getAddress());
     })
 
     it("owner", async() => {
@@ -83,15 +83,14 @@ describe("lins20 proxy", () => {
         await factory.createLins20(tick1, limit, totalSupply, burns, fee);
 
         const proxyAddr = await factory.inscriptions(tick1)
-        expect(proxyAddr).to.exist;
+        expect(proxyAddr, "proxy address not exists").to.exist;
         
         const proxy = await ethers.getContractAt("Lins20Proxy", proxyAddr) ;
+        
         await proxy.upgradeToAndCall(newAddr, newImpl.interface.encodeFunctionData("initialize", [tick1, limit, totalSupply, burns, fee]));
 
-        expect(await proxy.getImplementation() !== impl).eq(true);
+        expect(await proxy.getImplementation() !== await impl.getAddress(), "upgradeToAndCall error").eq(true);
 
-        // unauthorized
-        expect(proxy.connect(addr1.address).upgradeToAndCall(newAddr, newImpl.interface.encodeFunctionData("initialize", [tick1, limit, totalSupply, burns, fee]))).to.be.reverted;;
     })
 
     it("unauthorized upgrade", async() => {

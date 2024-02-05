@@ -5,16 +5,18 @@ pragma solidity ^0.8.20;
 import "./Lins20Factory.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IEthscription.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 /**
  * @title Lins20
  * @dev Lins20 is a ERC20 token with inscription.
+ * seperate mint pause & transfer pause
  */
-contract Lins20V2 is ERC20, Pausable, Ownable, IEthscription {
+contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription, ERC20 {
     uint256 public limit;     // limit per mint
     uint256 public burnsRate; // transfer burns rate 10000 = 100%
     uint256 public fee;       // fee
@@ -34,6 +36,18 @@ contract Lins20V2 is ERC20, Pausable, Ownable, IEthscription {
         _;
     }
 
+    function _msgSender() internal view virtual override(Context, ContextUpgradeable) returns (address) {
+        return msg.sender;
+    }
+
+    function _msgData() internal view virtual override(Context, ContextUpgradeable) returns (bytes calldata) {
+        return msg.data;
+    }
+
+    function _contextSuffixLength() internal view virtual override(Context, ContextUpgradeable) returns (uint256) {
+        return 0;
+    }
+
     function initialize(
          string memory _tick,
          uint256 _limit,
@@ -41,12 +55,15 @@ contract Lins20V2 is ERC20, Pausable, Ownable, IEthscription {
          uint256 _burnsRate,
          uint256 _fee
     ) public {
+        // __Pausable_init();
+        // __Ownable_init(tx.origin);
+         _transferOwnership(tx.origin);
+        
+
         require(_limit != 0, "limit incorrect");
         require(_maxMint != 0, "maxMint incorrect");
         require(_burnsRate < 10000, "burns out of range");
         require(_maxMint % _limit == 0, "limit incorrect");
-
-        _transferOwnership(tx.origin);
 
         maxMintTimes = 50;
         tick = _tick;
@@ -57,7 +74,7 @@ contract Lins20V2 is ERC20, Pausable, Ownable, IEthscription {
         _mintInscription = string.concat('data:,{"p":"lins20","op":"mint","tick":"', tick, '","amt":"', Strings.toString(_limit/(10 ** decimals())), '"}');
     }
 
-    constructor() ERC20("", "") Ownable(tx.origin) {
+    constructor() ERC20("", "") {
     }
 
     function symbol() public view override returns (string memory) {
