@@ -25,11 +25,10 @@ contract Lins20Proxy is ERC1967Proxy {
         _;
     }
 
-    function upgradeToAndCall(
-        address newImplementation,
-        bytes memory data
+    function upgradeTo(
+        address newImplementation
     ) public onlyAdmin {
-        ERC1967Utils.upgradeToAndCall(newImplementation, data);
+        ERC1967Utils.upgradeToAndCall(newImplementation, bytes(""));
     }
 
     function getImplementation() public view returns (address) {

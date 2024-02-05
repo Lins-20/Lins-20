@@ -87,7 +87,7 @@ describe("lins20 proxy", () => {
         
         const proxy = await ethers.getContractAt("Lins20Proxy", proxyAddr) ;
         
-        await proxy.upgradeToAndCall(newAddr, newImpl.interface.encodeFunctionData("initialize", [tick1, limit, totalSupply, burns, fee]));
+        await proxy.upgradeTo(newAddr);
 
         expect(await proxy.getImplementation() !== await impl.getAddress(), "upgradeToAndCall error").eq(true);
 
@@ -108,6 +108,6 @@ describe("lins20 proxy", () => {
         
         const proxy = await ethers.getContractAt("Lins20Proxy", proxyAddr) ;
         // unauthorized
-        expect(proxy.connect(addr1.address).upgradeToAndCall(newAddr, newImpl.interface.encodeFunctionData("initialize", [tick1, limit, totalSupply, burns, fee]))).to.be.reverted;;
+        expect(proxy.connect(addr1.address).upgradeTo(newAddr)).to.be.reverted;;
     })
 });
