@@ -10,13 +10,14 @@ import "./IEthscription.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
 /**
  * @title Lins20
  * @dev Lins20 is a ERC20 token with inscription.
  * seperate mint pause & transfer pause
  */
-contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription, ERC20 {
+contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription, ERC20Upgradeable {
     uint256 public limit;     // limit per mint
     uint256 public burnsRate; // transfer burns rate 10000 = 100%
     uint256 public fee;       // fee
@@ -36,29 +37,16 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
         _;
     }
 
-    function _msgSender() internal view virtual override(Context, ContextUpgradeable) returns (address) {
-        return msg.sender;
-    }
-
-    function _msgData() internal view virtual override(Context, ContextUpgradeable) returns (bytes calldata) {
-        return msg.data;
-    }
-
-    function _contextSuffixLength() internal view virtual override(Context, ContextUpgradeable) returns (uint256) {
-        return 0;
-    }
-
     function initialize(
          string memory _tick,
          uint256 _limit,
          uint256 _maxMint,
          uint256 _burnsRate,
          uint256 _fee
-    ) public {
-        // __Pausable_init();
-        // __Ownable_init(tx.origin);
-         _transferOwnership(tx.origin);
-        
+    ) public initializer {
+        __Pausable_init();
+        __Ownable_init(tx.origin);
+        __ERC20_init(string.concat("inscription ", tick) , _tick);
 
         require(_limit != 0, "limit incorrect");
         require(_maxMint != 0, "maxMint incorrect");
@@ -72,21 +60,6 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
         burnsRate = _burnsRate;
         fee = _fee;
         _mintInscription = string.concat('data:,{"p":"lins20","op":"mint","tick":"', tick, '","amt":"', Strings.toString(_limit/(10 ** decimals())), '"}');
-    }
-
-    constructor() ERC20("", "") {
-    }
-
-    function symbol() public view override returns (string memory) {
-        return tick;
-    }
-
-    function name() public view override returns (string memory) {
-        return string.concat("inscription ", tick);
-    }
-
-    function decimals() public pure override returns (uint8) {
-        return 18;
     }
 
     receive() external payable {
