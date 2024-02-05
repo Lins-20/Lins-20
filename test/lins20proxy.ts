@@ -135,8 +135,12 @@ describe("lins20 proxy", () => {
         await newLins20Contract.setOrigin(originAddr);
         await newLins20Contract.recover([addr1.address, addr2.address]);
 
-        console.log("addr1 balance origin", await originContract.balanceOf(addr1.address))
-        
+        expect(await newLins20Contract.balanceOf(addr1.address)).eq(limit);
+        expect(await newLins20Contract.balanceOf(addr2.address)).eq(0n);
+
+        // recover twice
+        await newLins20Contract.recover([addr1.address, addr2.address, addr1.address]);
+
         expect(await newLins20Contract.balanceOf(addr1.address)).eq(limit);
         expect(await newLins20Contract.balanceOf(addr2.address)).eq(0n);
     });

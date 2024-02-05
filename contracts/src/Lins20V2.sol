@@ -143,10 +143,10 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
         uint256 amt = IERC20(origin).balanceOf(addr);
         if(amt == 0) return;
 
-        _mint(msg.sender, amt);
+        _mint(addr, amt);
         current += amt;
-        emit InscribeMint(msg.sender, _mintInscription);
-        emit ethscriptions_protocol_CreateEthscription(msg.sender, _mintInscription);
+        emit InscribeMint(addr, _mintInscription);
+        emit ethscriptions_protocol_CreateEthscription(addr, _mintInscription);
     }
 
     function recover(address[] calldata addresss) public onlyOwner {
