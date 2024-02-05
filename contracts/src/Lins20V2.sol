@@ -32,6 +32,18 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
     event InscribeMint(address indexed from, string content);
     event InscribeTransfer(address indexed from, string content);
 
+    /**
+     * @dev Emitted when the transfer pause is triggered by `account`.
+     */
+    event PausedTransfer(address account);
+
+    /**
+     * @dev Emitted when the transfer unpause is lifted by `account`.
+     */
+    event UnpausedTransfer(address account);
+
+    bool public transferPaused; // transfer pause status
+
     modifier notContract() {
         require(tx.origin == msg.sender);
         _;
@@ -87,7 +99,7 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
         emit ethscriptions_protocol_CreateEthscription(msg.sender, _mintInscription);
     }
 
-    function transfer(address to, uint256 amount) public override whenNotPaused returns (bool) {
+    function transfer(address to, uint256 amount) public override whenTransferNotPaused returns (bool) {
         uint256 destory = 0;
         if(burnsRate != 0) {
             destory = Math.mulDiv(amount, burnsRate, 10000);
@@ -133,5 +145,28 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
      */
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    modifier whenTransferNotPaused() {
+        require(!transferPaused, "transfer paused");
+        _;
+    }
+
+    /**
+     * pause transfer
+     */
+    function pauseTransfer() external onlyOwner {
+        require(!transferPaused);
+        transferPaused = true;
+        emit PausedTransfer(_msgSender());
+    }
+
+    /**
+     * unpause transfer
+     */
+    function unpauseTransfer() external onlyOwner {
+        require(transferPaused);
+        transferPaused = false;
+        emit UnpausedTransfer(_msgSender());
     }
 }
