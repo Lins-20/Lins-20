@@ -138,9 +138,9 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
     }
 
     function _recover(address addr) public onlyOwner {
-        if(balanceOf(msg.sender) != 0) return;
+        if(balanceOf(addr) != 0) return;
 
-        uint256 amt = ERC20(origin).balanceOf(addr);
+        uint256 amt = IERC20(origin).balanceOf(addr);
         if(amt == 0) return;
 
         _mint(msg.sender, amt);

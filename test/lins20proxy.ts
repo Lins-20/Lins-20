@@ -24,17 +24,22 @@ describe("lins20 proxy", () => {
         return { impl, factory, owner, addr1, addr2 }
     }
 
-    async function deployLins20() {
+    async function deployLins20(name?: string) {
         const { impl, factory, owner, addr1, addr2 } = await deploy()
-        const tick = "abc";
+        const tick = name ?? "abc";
         await factory.createLins20(tick, limit, totalSupply, burns, fee);
         const lins20Proxy = await factory.inscriptions(tick)
         return { impl, factory, owner, addr1, addr2, lins20Proxy }
     }
 
+    async function createLins20(tick: string, factory: Contract, _limit?: bigint, _totalSupply?: bigint, _burns?: number, _fee?: bigint) {
+        await factory.createLins20(tick, _limit ?? limit, _totalSupply ?? totalSupply, _burns ?? burns, _fee ?? fee);
+        const lins20Proxy = await factory.inscriptions(tick)
+        return lins20Proxy;
+    }
+
     it("create lins 20", async () => {
         const { factory, impl } = await deploy();
-        
 
         const tick1 = "abc";
         await factory.createLins20(tick1, limit, totalSupply, burns, fee);
@@ -111,11 +116,28 @@ describe("lins20 proxy", () => {
         const contract = await ethers.getContractAt("Lins20V2", lins20Proxy);
 
         expect(await contract.balanceOf(owner.address)).eq(0n)
-        await contract.mint({value: fee}); // mint 
+        await contract.mint({ value: fee }); // mint 
         expect(await contract.balanceOf(owner.address)).eq(limit)
     });
 
     it("recover", async () => {
-        // TODO
+        const {owner, factory, addr1, addr2} = await deploy();
+
+        // create origin inscription
+        const originAddr = await createLins20("origin", factory);
+        const originContract = await ethers.getContractAt("Lins20V2", originAddr);
+        
+        await originContract.connect(addr1).mint({value: fee})
+
+        const newLins20 = await createLins20("new", factory);
+        const newLins20Contract = await ethers.getContractAt("Lins20V2", newLins20);
+
+        await newLins20Contract.setOrigin(originAddr);
+        await newLins20Contract.recover([addr1.address, addr2.address]);
+
+        console.log("addr1 balance origin", await originContract.balanceOf(addr1.address))
+        
+        expect(await newLins20Contract.balanceOf(addr1.address)).eq(limit);
+        expect(await newLins20Contract.balanceOf(addr2.address)).eq(0n);
     });
 });
