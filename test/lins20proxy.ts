@@ -140,8 +140,10 @@ describe("lins20 proxy", () => {
 
         // recover twice
         await newLins20Contract.recover([addr1.address, addr2.address, addr1.address]);
-
         expect(await newLins20Contract.balanceOf(addr1.address)).eq(limit);
         expect(await newLins20Contract.balanceOf(addr2.address)).eq(0n);
+
+        // recover authorize
+        await expect(newLins20Contract.connect(addr1).recover([addr1.address])).to.reverted;
     });
 });
