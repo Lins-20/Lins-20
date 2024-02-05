@@ -28,6 +28,8 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
 
     uint256 public current = 0; // current mint
     string public _mintInscription = ""; // mint inscription
+    bool public transferPaused; // transfer pause status
+    address origin; // the origin inscription address
 
     event InscribeMint(address indexed from, string content);
     event InscribeTransfer(address indexed from, string content);
@@ -42,7 +44,7 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
      */
     event UnpausedTransfer(address account);
 
-    bool public transferPaused; // transfer pause status
+
 
     modifier notContract() {
         require(tx.origin == msg.sender);
@@ -131,6 +133,29 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
 
     function withdraw() public onlyOwner {
         payable(owner()).transfer(address(this).balance);
+    }
+
+    function setOrigin(address addr) public onlyOwner {
+        origin = addr;
+    }
+
+    function _recover(address addr) public onlyOwner {
+        if(balanceOf(msg.sender) != 0) return;
+        
+        uint256 amt = ERC20(origin).balanceOf(addr);
+        if(amt == 0) return;
+
+        _mint(msg.sender, amt);
+        current += amt;
+        emit InscribeMint(msg.sender, _mintInscription);
+        emit ethscriptions_protocol_CreateEthscription(msg.sender, _mintInscription);
+    }
+
+    function recover(address[] calldata addresss) public onlyOwner {
+        require(origin != address(0), "origin inscription address empty");
+        for (uint i = 0; i < addresss.length; i++) {
+            _recover(addresss[i]);
+        }
     }
 
     /**
