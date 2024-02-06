@@ -30,9 +30,6 @@ async function action(data: string[]) {
     const records = await loadCSV();
     const address = records.slice(1).map(s => s[0])
     console.log(address.slice(0, 100));
-    return;
-
-
     let page = 0;
     while (1) {
         let start = page * size;
