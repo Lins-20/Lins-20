@@ -1,7 +1,7 @@
 import { ethers, upgrades } from "hardhat";
 
 async function main() {
-    const impl = "0x97700d961b8f14b27973df18758e92ee591e373a"; // the lins20v2 address, if not deployed, set it to ethers.ZeroAddress
+    const impl = "0x01B3b62026374109e4644C2e0C8aF601415230C5"; // the lins20v2 address, if not deployed, set it to ethers.ZeroAddress
     const factory: any = await ethers.getContractFactory("Lins20FactoryV2");
     const proxy = await upgrades.deployProxy(factory, [impl], {
         initializer: "initialize",

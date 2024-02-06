@@ -29,7 +29,7 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
     uint256 public current = 0; // current mint
     string public _mintInscription = ""; // mint inscription
     bool public transferPaused; // transfer pause status
-    address origin; // the origin inscription address
+    address public origin; // the origin inscription address
 
     event InscribeMint(address indexed from, string content);
     event InscribeTransfer(address indexed from, string content);
@@ -137,7 +137,7 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
         origin = addr;
     }
 
-    function _recover(address addr) public onlyOwner {
+    function _recover(address addr) internal onlyOwner {
         if(balanceOf(addr) != 0) return;
 
         uint256 amt = IERC20(origin).balanceOf(addr);
