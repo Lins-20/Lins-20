@@ -118,6 +118,17 @@ describe("lins20 proxy", () => {
         expect(await contract.balanceOf(owner.address)).eq(0n)
         await contract.mint({ value: fee }); // mint 
         expect(await contract.balanceOf(owner.address)).eq(limit)
+
+        // pause mint
+        await contract.pause();
+        await expect(contract.mint({value: fee})).to.be.reverted;
+        expect(await contract.paused()).eq(true);
+
+        // unpause mint
+        await contract.unpause();
+        expect(await contract.paused()).eq(false);
+        await contract.mint({value: fee});
+        expect(await contract.balanceOf(owner.address)).eq(limit * 2n)
     });
 
     it("recover", async () => {
