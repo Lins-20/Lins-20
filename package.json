@@ -33,6 +33,7 @@
     "@types/chai": "^4.2.0",
     "@types/mocha": ">=9.1.0",
     "axios": "^1.4.0",
+    "csv-parse": "^5.5.3",
     "dotenv": "^16.1.4",
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.1",
