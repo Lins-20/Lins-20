@@ -30,6 +30,7 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
     string public _mintInscription = ""; // mint inscription
     bool public transferPaused; // transfer pause status
     address public origin; // the origin inscription address
+    address public market; // the market address
 
     event InscribeMint(address indexed from, string content);
     event InscribeTransfer(address indexed from, string content);
@@ -100,16 +101,24 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
     }
 
     function transfer(address to, uint256 amount) public override whenTransferNotPaused returns (bool) {
+        require(balanceOf(msg.sender) >= amount, "insufficient balance");
+
+        if(msg.sender == market) {
+            return _insTransfer(to, amount);
+        }
+
         uint256 destory = 0;
         if(burnsRate != 0) {
             destory = Math.mulDiv(amount, burnsRate, 10000);
         }
-        require(balanceOf(msg.sender) >= amount, "insufficient balance");
-
         if(destory != 0) {
             _burn(msg.sender, destory);
         }
-        _transfer(msg.sender, to, amount - destory);
+        return _insTransfer(to, amount - destory);
+    }
+
+    function _insTransfer(address to, uint256 amount) internal returns (bool) {
+        _transfer(msg.sender, to, amount);
 
         uint256 denominator = 10 ** decimals();
         uint256 fraction = amount % denominator;
@@ -123,6 +132,10 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
         emit InscribeTransfer(msg.sender, ins);
         emit ethscriptions_protocol_TransferEthscriptionForPreviousOwner(msg.sender, to, bytes32(abi.encodePacked(tick)));
         return true;
+    }
+
+    function setMarket(address addr) public onlyOwner {
+        market = addr;
     }
 
     function setMaxMintTimes(uint256 times) public onlyOwner {
