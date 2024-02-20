@@ -113,11 +113,11 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
         return last_offer_id;
     }
 
-    function safeTransfer(ERC20 token, address to, uint256 value) internal {
+    function safeTransfer(ERC20 token, address to, uint256 value) whenNotPaused internal {
         _callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
     }
 
-    function safeTransferFrom(ERC20 token, address from, address to, uint256 value) internal {
+    function safeTransferFrom(ERC20 token, address from, address to, uint256 value) whenNotPaused internal {
         _callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
     }
 
@@ -132,7 +132,26 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
             require(abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
         }
     }
-    
+
+    function setFee(uint256 fee) public onlyOwner  {
+        require(fee <= 10000, "lg 10000");
+        feeRate = fee;
+    }
+
+    /**
+     * @notice Pause (admin only)
+     */
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /**
+     * @notice Unpause (admin only)
+     */
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
