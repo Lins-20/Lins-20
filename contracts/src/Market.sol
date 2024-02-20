@@ -10,13 +10,9 @@ import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "./EventfulMarket.sol";
 
 contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2StepUpgradeable, UUPSUpgradeable {
-
-    uint public last_offer_id = 0;
-
+    uint public last_offer_id;
     mapping (uint256 => OfferInfo) public offers;
-
-    bool locked = false;
-
+    bool locked;
     uint256 public feeRate; // rate 10000 = 100%
 
     struct OfferInfo {
@@ -36,6 +32,8 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
     function initialize(uint256 _feeRate) public initializer {
         __Ownable_init(tx.origin);
         feeRate = _feeRate;
+        last_offer_id = 0;
+        locked = false;
     }
 
     function getOwner(uint id) public view returns (address owner) {
