@@ -4,10 +4,12 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "./EventfulMarket.sol";
 
-contract Market is EventfulMarket, Initializable, Ownable2StepUpgradeable{
+contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2StepUpgradeable, UUPSUpgradeable {
 
     uint public last_offer_id = 0;
 
@@ -31,8 +33,6 @@ contract Market is EventfulMarket, Initializable, Ownable2StepUpgradeable{
         locked = false;
     }
 
-
-
     function initialize(uint256 _feeRate) public initializer {
         __Ownable_init(tx.origin);
         feeRate = _feeRate;
@@ -47,8 +47,7 @@ contract Market is EventfulMarket, Initializable, Ownable2StepUpgradeable{
         return (offer.pay_amt, offer.pay_gem, offer.buy_amt, offer.owner);
     }
 
-    function buy(uint id) public synchronized payable returns (bool success)
-    {
+    function buy(uint id) public synchronized payable returns (bool success) {
         OfferInfo memory offer = offers[id];
         uint256 spend = msg.value;
         require(spend == offer.buy_amt, "Not enough ETH sent");
@@ -68,8 +67,7 @@ contract Market is EventfulMarket, Initializable, Ownable2StepUpgradeable{
     }
 
     // Cancel an offer. Refunds offer maker.
-    function cancel(uint id) public synchronized returns (bool success)
-    {
+    function cancel(uint id) public synchronized returns (bool success) {
         require(getOwner(id) == msg.sender);
         OfferInfo memory offer = offers[id];
         safeTransfer(offer.pay_gem, offer.owner, offer.pay_amt);
@@ -84,8 +82,7 @@ contract Market is EventfulMarket, Initializable, Ownable2StepUpgradeable{
         success = true;
     }
 
-    function make(uint pay_amt, ERC20 pay_gem, uint buy_amt) public synchronized returns (uint id)
-    {
+    function make(uint pay_amt, ERC20 pay_gem, uint buy_amt) public synchronized returns (uint id) {
         require(pay_amt > 0);
         require(address(pay_gem) != address(0), "pay_gem address cannot be 0");
         require(buy_amt > 0);
@@ -113,8 +110,7 @@ contract Market is EventfulMarket, Initializable, Ownable2StepUpgradeable{
         payable(owner()).transfer(address(this).balance);
     }
 
-    function _next_id() internal returns (uint)
-    {
+    function _next_id() internal returns (uint) {
         last_offer_id++;
         return last_offer_id;
     }
@@ -138,4 +134,9 @@ contract Market is EventfulMarket, Initializable, Ownable2StepUpgradeable{
             require(abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
         }
     }
+    
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
+
 }
