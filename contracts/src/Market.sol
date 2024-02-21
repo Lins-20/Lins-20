@@ -14,6 +14,7 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
     mapping (uint256 => OfferInfo) public offers;
     bool locked;
     uint256 public feeRate; // rate 10000 = 100%
+    mapping (address => bool) public whiteList;
 
     struct OfferInfo {
         uint256     pay_amt;
@@ -81,6 +82,7 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
     }
 
     function make(uint pay_amt, ERC20 pay_gem, uint buy_amt) public synchronized returns (uint id) {
+        require(whiteList[address(pay_gem)], "address illegal");
         require(pay_amt > 0);
         require(address(pay_gem) != address(0), "pay_gem address cannot be 0");
         require(buy_amt > 0);
@@ -136,6 +138,14 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
     function setFee(uint256 fee) public onlyOwner  {
         require(fee <= 10000, "lg 10000");
         feeRate = fee;
+    }
+
+    function addWhiteList(address addr) public onlyOwner {
+        whiteList[addr] = true;    
+    }
+
+    function rmWhiteList(address addr) public onlyOwner {
+        whiteList[addr] = false;
     }
 
     /**
