@@ -5,6 +5,7 @@ import { CHAINID } from './constants/constants';
 import * as dotenv from 'dotenv'
 dotenv.config({ path: '.env' })
 import '@openzeppelin/hardhat-upgrades';
+import "./tasks/factoryDeploy";
 
 const config: HardhatUserConfig = {
   networks: {
