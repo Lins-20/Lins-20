@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.20;
 
-import "./Lins20Factory.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
