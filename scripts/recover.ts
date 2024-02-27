@@ -7,7 +7,7 @@ import { ethers } from "hardhat";
 const loadCSV = async () => {
     const records = [];
     const parser = fs
-        .createReadStream(`${__dirname}/../resources/holders.csv`)
+        .createReadStream(`${__dirname}/../resources/alien.csv`)
         .pipe(parse({
         }));
     for await (const record of parser) {
@@ -16,12 +16,12 @@ const loadCSV = async () => {
     return records;
 };
 
-const address = "0xbe5589c967CCEC8dE72236e140A56bbabD794FDc";  // new lins20 address
-const size = 1000;
+const address = "0x753cf76D04b0f91069551c8Ab9D7ef5cD7a7e9b6";  // new lins20 address
+const size = 500;
 
 async function action(data: string[]) {
     const contract = await ethers.getContractAt("Lins20V2", address);
-    const res: any = await contract.recover(data);
+    const res: any = await contract.recover(data, {nonce: 64});
     const receipt = await res.wait();
     return receipt.status === 1;
 }
