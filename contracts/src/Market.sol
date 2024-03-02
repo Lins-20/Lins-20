@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "./EventfulMarket.sol";
+import "./Lins20V2.sol";
 
 contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2StepUpgradeable, UUPSUpgradeable {
     uint public last_offer_id;
@@ -18,7 +18,7 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
 
     struct OfferInfo {
         uint256     pay_amt;
-        ERC20       pay_gem;
+        Lins20V2    pay_gem;
         uint256     buy_amt;
         address     owner;
     }
@@ -41,7 +41,7 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
         return offers[id].owner;
     }
 
-    function getOffer(uint id) public view returns (uint, ERC20, uint, address) {
+    function getOffer(uint id) public view returns (uint, Lins20V2, uint, address) {
         OfferInfo memory offer = offers[id];
         return (offer.pay_amt, offer.pay_gem, offer.buy_amt, offer.owner);
     }
@@ -52,7 +52,7 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
         require(spend == offer.buy_amt, "Not enough ETH sent");
         uint256 fee = Math.mulDiv(spend, feeRate, 10000);
         payable(offer.owner).transfer(spend - fee);
-        safeTransfer(offer.pay_gem, msg.sender, offer.pay_amt);
+        offer.pay_gem.marketTransaction(msg.sender, offer.pay_amt);
         emit LogTake(
             id,
             offer.owner,
@@ -69,7 +69,7 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
     function cancel(uint id) public synchronized returns (bool success) {
         require(getOwner(id) == msg.sender);
         OfferInfo memory offer = offers[id];
-        safeTransfer(offer.pay_gem, offer.owner, offer.pay_amt);
+        offer.pay_gem.transfer(offer.owner, offer.pay_amt);
         emit LogKill(
             id,
             offer.owner,
@@ -81,7 +81,7 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
         success = true;
     }
 
-    function make(uint pay_amt, ERC20 pay_gem, uint buy_amt) public synchronized returns (uint id) {
+    function make(uint pay_amt, Lins20V2 pay_gem, uint buy_amt) public synchronized returns (uint id) {
         require(whiteList[address(pay_gem)], "address illegal");
         require(pay_amt > 0);
         require(address(pay_gem) != address(0), "pay_gem address cannot be 0");
@@ -95,7 +95,7 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
         id = _next_id();
         offers[id] = info;
 
-        safeTransferFrom(pay_gem, msg.sender, address(this), pay_amt);
+        pay_gem.transferFrom(msg.sender, address(this), pay_amt);
 
         emit LogMake(
             id,
@@ -115,33 +115,13 @@ contract Market is Initializable, EventfulMarket, PausableUpgradeable, Ownable2S
         return last_offer_id;
     }
 
-    function safeTransfer(ERC20 token, address to, uint256 value) whenNotPaused internal {
-        _callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
-    }
-
-    function safeTransferFrom(ERC20 token, address from, address to, uint256 value) whenNotPaused internal {
-        _callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
-    }
-
-    function _callOptionalReturn(ERC20 token, bytes memory data) private {
-        uint256 size;
-        assembly { size := extcodesize(token) }
-        require(size > 0, "Not a contract");
-
-        (bool success, bytes memory returndata) = address(token).call(data);
-        require(success, "Token call failed");
-        if (returndata.length > 0) { // Return data is optional
-            require(abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
-        }
-    }
-
     function setFee(uint256 fee) public onlyOwner  {
         require(fee <= 10000, "lg 10000");
         feeRate = fee;
     }
 
     function addWhiteList(address addr) public onlyOwner {
-        whiteList[addr] = true;    
+        whiteList[addr] = true;
     }
 
     function rmWhiteList(address addr) public onlyOwner {

@@ -103,7 +103,7 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
         require(balanceOf(msg.sender) >= amount, "insufficient balance");
 
         if(msg.sender == market) {
-            return _insTransfer(to, amount);
+            return _insTransfer(msg.sender, to, amount);
         }
 
         uint256 destory = 0;
@@ -113,11 +113,38 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
         if(destory != 0) {
             _burn(msg.sender, destory);
         }
-        return _insTransfer(to, amount - destory);
+        return _insTransfer(msg.sender, to, amount - destory);
     }
 
-    function _insTransfer(address to, uint256 amount) internal returns (bool) {
-        _transfer(msg.sender, to, amount);
+    function transferFrom(address from, address to, uint256 amount) public override whenTransferNotPaused returns (bool) {
+        if(msg.sender == market) {
+            return super.transferFrom(from, to, amount);
+        }
+        uint256 destory = 0;
+        if(burnsRate != 0) {
+            destory = Math.mulDiv(amount, burnsRate, 10000);
+        }
+        if(destory != 0) {
+            _burn(msg.sender, destory);
+        }
+        super.transferFrom(from, to, amount - destory);
+        return true;
+    }
+
+    function marketTransaction(address to, uint256 amount) public whenTransferNotPaused returns (bool) {
+        require(msg.sender == market);
+        uint256 destory = 0;
+        if(burnsRate != 0) {
+            destory = Math.mulDiv(amount, burnsRate, 10000);
+        }
+        if(destory != 0) {
+            _burn(msg.sender, destory);
+        }
+        return _insTransfer(msg.sender, to, amount - destory);
+    }
+
+    function _insTransfer(address from, address to, uint256 amount) internal returns (bool) {
+        _transfer(from, to, amount);
 
         uint256 denominator = 10 ** decimals();
         uint256 fraction = amount % denominator;
@@ -128,8 +155,8 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
            value = string.concat(value, ".", Strings.toString(fraction));
         }
         string memory ins = string.concat('data:,{"p":"lins20","op":"transfer","tick":"', tick, '","amt":"', value, '","to":"', Strings.toHexString(to), '"}');
-        emit InscribeTransfer(msg.sender, ins);
-        emit ethscriptions_protocol_TransferEthscriptionForPreviousOwner(msg.sender, to, bytes32(abi.encodePacked(tick)));
+        emit InscribeTransfer(from, ins);
+        emit ethscriptions_protocol_TransferEthscriptionForPreviousOwner(from, to, bytes32(abi.encodePacked(tick)));
         return true;
     }
 
