@@ -27,7 +27,7 @@ describe("market", function () {
         await factory.initialize(lins20impl);
 
         // create lin20v2
-       
+
         const res = await factory.createLins20(tick, limit, totalSupply, burns, fee);
         await res.wait();
 
@@ -51,10 +51,12 @@ describe("market", function () {
 
         const ok = await market.whiteList(await lins20Contract.getAddress());
         expect(ok).eq(true);
+        // set market
+        lins20Contract.setMarket(address);
 
         await lins20Contract.mint({ value: fee }); // mint
         const balance = await lins20Contract.balanceOf(owner.address);
-        expect(balance).eq(limit)
+        expect(balance).eq(limit);
 
         // params: uint pay_amt, ERC20 pay_gem, uint buy_amt
         const pay_amt = 100n;
@@ -188,7 +190,7 @@ describe("market", function () {
         const linsAddr = await lins20Contract.getAddress();
         const wtx = await market.addWhiteList(linsAddr); // add whiteList
         await wtx.wait();
-        
+
         const tx = await market.whiteList(linsAddr);
         expect(tx).eq(true);
 
