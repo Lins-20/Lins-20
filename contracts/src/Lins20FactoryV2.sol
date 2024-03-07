@@ -14,6 +14,15 @@ import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 
 contract Lins20FactoryV2 is Initializable, PausableUpgradeable, Ownable2StepUpgradeable, UUPSUpgradeable {
+    struct Parameters {
+        string tick;         // inscription tick
+        uint256 limit;       // limit per mint
+        uint256 totalSupply; // total supply
+        uint256 burnsRate;   // transfer burns rate  10000 = 100%
+        uint256 fee;         // mint fee
+    }
+    Parameters public parameters;
+
     mapping(string => address) public inscriptions;
     event InscribeDeploy(address indexed from, string content);
     event AddInscription(address indexed from, string data);
