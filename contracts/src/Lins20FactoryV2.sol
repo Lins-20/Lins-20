@@ -68,7 +68,7 @@ contract Lins20FactoryV2 is Initializable, PausableUpgradeable, Ownable2StepUpgr
 
         require(amount >= 50000000000000000000000, "lins not enough");
         address linsAddress = 0x2566a15ac30899EE83FDB984C8D8BEe89988486C;
-        IERC20(linsAddress).transfer(address(0), amount);
+        IERC20(linsAddress).transferFrom(msg.sender, address(0), amount);
 
         bytes memory _data = abi.encodeWithSelector(Lins20V2.initialize.selector, tick, limit, totalSupply, burnsRate, fee);
         proxy = address(new Lins20Proxy{salt: keccak256(abi.encode(tick, limit, totalSupply, burnsRate, fee))}(lins20Impl, _data));
