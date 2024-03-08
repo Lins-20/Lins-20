@@ -171,10 +171,6 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
         market = addr;
     }
 
-    function setFactory(address addr) public onlyOwner {
-        factory = addr;
-    }
-
     function setMaxMintTimes(uint256 times) public onlyOwner {
         maxMintTimes = times;
     }

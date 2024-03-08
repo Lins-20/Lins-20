@@ -2,7 +2,7 @@ import { ethers, upgrades } from "hardhat";
 
 
 async function main() {
-    const proxyAddr = "0x5cb5Dc71E652CAeF6791e9750d55aEC46aC38835";
+    const proxyAddr = "0x187714c96C029b184db59Fa6fFd18973C4849f3E";
     const v2: any = await ethers.getContractFactory("Lins20FactoryV2");
     // const v1: any = await ethers.getContractFactory("Lins20FactoryV2");
     // await upgrades.forceImport(proxyAddr, v1);
