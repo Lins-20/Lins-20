@@ -71,7 +71,7 @@ contract Lins20FactoryV2 is Initializable, PausableUpgradeable, Ownable2StepUpgr
         require(totalSupply % limit == 0, "limit incorrect");
         uint256 decimals = 10 ** 18;
 
-        string memory data = string.concat('{"tick":"', tick, '","max":"', totalSupply, '","lim":"', limit, '","burns":"', burnsRate, '","fee":"', fee, '"}');
+        string memory data = string.concat('{"tick":"', tick, '","max":"', Strings.toString(totalSupply), '","lim":"', Strings.toString(limit), '","burns":"', Strings.toString(burnsRate), '","fee":"', Strings.toString(fee), '"}');
         emit AddInscription(msg.sender, data);
 
         if(deployFee > 0 && address(deployPayToken) != address(0) && msg.sender != owner()) {
