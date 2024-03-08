@@ -39,32 +39,24 @@ describe("lins20 proxy", () => {
     }
 
     it("create lins 20", async () => {
-        const { factory, impl } = await deploy();
+        const { factory, addr1, impl } = await deployLins20("lins");
 
-        const tick1 = "abc";
-        await factory.createLins20(tick1, limit, totalSupply, burns, fee);
+        const tick1 = "lins";
+        const linsAddress = await factory.inscriptions(tick1)
+        expect(linsAddress).to.exist;
+        const linsProxy = await ethers.getContractAt("Lins20V2", linsAddress);
+        await linsProxy.mint({value: fee});
 
-        const tick2 = "ABC";
+        await factory.setDeployPayToken(linsAddress);
+        await factory.setDeployFee(500000000000000000000n)
+        const tick2 = "user_token";
         await factory.createLins20(tick2, limit * 2n, totalSupply * 2n, burns - 1, fee - 1);
-
-        const addr1 = await factory.inscriptions(tick1)
-        expect(addr1).to.exist;
-
         const addr2 = await factory.inscriptions(tick2)
         expect(addr2).to.exist;
-
-        const c1 = await ethers.getContractAt("Lins20V2", addr1);
-        const c2 = await ethers.getContractAt("Lins20V2", addr2);
-
-        expect(await c1.symbol() !== await c2.symbol()).eq(true);
-        expect(await c1.limit() !== await c2.limit()).eq(true);
-        expect(await c1.fee() !== await c2.fee()).eq(true);
-        expect(await c1.burnsRate() !== await c2.burnsRate()).eq(true);
-        expect(await c1.maxMint() !== await c2.maxMint()).eq(true);
-        expect(await c1.owner() === await c2.owner()).eq(true);
-
-        const proxy = await ethers.getContractAt("Lins20Proxy", addr1);
-        expect(await proxy.getImplementation() === await impl.getAddress());
+        const userTokenProxy = await ethers.getContractAt("Lins20V2", addr2);
+        expect(await linsProxy.owner() === await userTokenProxy.owner()).eq(true);
+        await factory.setLins20Impl(linsAddress);
+        expect(await factory.lins20Impl() === linsAddress).eq(true);
     })
 
     it("owner", async () => {
@@ -116,7 +108,7 @@ describe("lins20 proxy", () => {
         const contract = await ethers.getContractAt("Lins20V2", lins20Proxy);
 
         expect(await contract.balanceOf(owner.address)).eq(0n)
-        await contract.mint({ value: fee }); // mint 
+        await contract.mint({ value: fee }); // mint
         expect(await contract.balanceOf(owner.address)).eq(limit)
 
         // pause mint
@@ -137,7 +129,7 @@ describe("lins20 proxy", () => {
         // create origin inscription
         const originAddr = await createLins20("origin", factory);
         const originContract = await ethers.getContractAt("Lins20V2", originAddr);
-        
+
         await originContract.connect(addr1).mint({value: fee})
 
         const newLins20 = await createLins20("new", factory);

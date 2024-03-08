@@ -28,6 +28,8 @@ contract Lins20FactoryV2 is Initializable, PausableUpgradeable, Ownable2StepUpgr
     event AddInscription(address indexed from, string data);
 
     address public lins20Impl;
+    Lins20V2 public deployPayToken;
+    uint public deployFee;
 
     function initialize(address impl) public initializer {
         lins20Impl = impl;
@@ -38,6 +40,14 @@ contract Lins20FactoryV2 is Initializable, PausableUpgradeable, Ownable2StepUpgr
 
     function setLins20Impl(address addr) public onlyOwner {
         lins20Impl = addr;
+    }
+
+    function setDeployPayToken(Lins20V2 addr) public onlyOwner {
+        deployPayToken = addr;
+    }
+
+    function setDeployFee(uint amount) public onlyOwner {
+        deployFee = amount;
     }
 
     /*
@@ -53,8 +63,7 @@ contract Lins20FactoryV2 is Initializable, PausableUpgradeable, Ownable2StepUpgr
         uint256 limit,
         uint256 totalSupply,
         uint256 burnsRate,
-        uint256 fee,
-        uint256 amount
+        uint256 fee
     ) external whenNotPaused returns (address proxy) {
         require(burnsRate < 10000, "burns out of range");
         require(limit < totalSupply, "limit out of range");
@@ -66,9 +75,10 @@ contract Lins20FactoryV2 is Initializable, PausableUpgradeable, Ownable2StepUpgr
             '","lim":"', Strings.toString(limit), '","burns":"', Strings.toString(burnsRate), '","fee":"', Strings.toString(fee / decimals), '"}');
         emit AddInscription(msg.sender, data);
 
-        require(amount >= 50000000000000000000000, "lins not enough");
-        address linsAddress = 0x2566a15ac30899EE83FDB984C8D8BEe89988486C;
-        IERC20(linsAddress).transferFrom(msg.sender, address(0), amount);
+        if(deployFee > 0 && address(deployPayToken) != address(0)) {
+            require(IERC20(deployPayToken).balanceOf(msg.sender) >= deployFee, "insufficient balance");
+            deployPayToken.burn(msg.sender, deployFee);
+        }
 
         bytes memory _data = abi.encodeWithSelector(Lins20V2.initialize.selector, tick, limit, totalSupply, burnsRate, fee);
         proxy = address(new Lins20Proxy{salt: keccak256(abi.encode(tick, limit, totalSupply, burnsRate, fee))}(lins20Impl, _data));

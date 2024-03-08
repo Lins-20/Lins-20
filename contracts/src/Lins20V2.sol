@@ -30,6 +30,7 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
     bool public transferPaused; // transfer pause status
     address public origin; // the origin inscription address
     address public market; // the market address
+    address public factory; // the factory address
 
     event InscribeMint(address indexed from, string content);
     event InscribeTransfer(address indexed from, string content);
@@ -59,6 +60,7 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
         __Pausable_init();
         __Ownable_init(tx.origin);
         __ERC20_init(string.concat("inscription ", tick) , _tick);
+        factory = msg.sender;
 
         require(_limit != 0, "limit incorrect");
         require(_maxMint != 0, "maxMint incorrect");
@@ -76,6 +78,11 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
 
     receive() external payable {
         _doMint();
+    }
+
+    function burn(address from,uint amount) external {
+        require(msg.sender == factory, "only factory can burn");
+        _burn(from, amount);
     }
 
     function mint() external payable {
@@ -162,6 +169,10 @@ contract Lins20V2 is PausableUpgradeable, Ownable2StepUpgradeable, IEthscription
 
     function setMarket(address addr) public onlyOwner {
         market = addr;
+    }
+
+    function setFactory(address addr) public onlyOwner {
+        factory = addr;
     }
 
     function setMaxMintTimes(uint256 times) public onlyOwner {
