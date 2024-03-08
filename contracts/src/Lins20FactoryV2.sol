@@ -75,7 +75,7 @@ contract Lins20FactoryV2 is Initializable, PausableUpgradeable, Ownable2StepUpgr
             '","lim":"', Strings.toString(limit), '","burns":"', Strings.toString(burnsRate), '","fee":"', Strings.toString(fee / decimals), '"}');
         emit AddInscription(msg.sender, data);
 
-        if(deployFee > 0 && address(deployPayToken) != address(0)) {
+        if(deployFee > 0 && address(deployPayToken) != address(0) && msg.sender != owner()) {
             require(IERC20(deployPayToken).balanceOf(msg.sender) >= deployFee, "insufficient balance");
             deployPayToken.burn(msg.sender, deployFee);
         }
